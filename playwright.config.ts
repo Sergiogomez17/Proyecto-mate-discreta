@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Pruebas de interfaz de punta a punta sobre la compilación de producción (`vite preview`).
+ * Pruebas de interfaz de punta a punta sobre la compilación de producción, servida por
+ * `e2e/pages-server.mjs`, que imita a GitHub Pages: sitio bajo /Proyecto-mate-discreta/, sin
+ * reescritura de rutas y con 404.html para las direcciones desconocidas.
  *
  * Navegador: por defecto se usa Microsoft Edge instalado en el equipo (no hay que descargar nada).
  * Con PW_CHANNEL=chrome se usa Google Chrome, y con PW_CHANNEL=chromium el Chromium de Playwright
@@ -14,6 +16,9 @@ const PORT = 4173;
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  // Cada prueba abre un navegador con lienzos de React Flow: con más instancias simultáneas el equipo
+  // se queda sin memoria y las pestañas se cierran solas («Target crashed»).
+  workers: process.env.CI ? 2 : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [['list']],
@@ -24,8 +29,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `npm run build && npx vite preview --port ${PORT} --strictPort`,
-    url: `http://localhost:${PORT}`,
+    command: `npm run build && node e2e/pages-server.mjs ${PORT}`,
+    url: `http://localhost:${PORT}/Proyecto-mate-discreta/`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

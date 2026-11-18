@@ -1,18 +1,34 @@
 import { test as base, expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 
+/** Carpeta en la que GitHub Pages publica el sitio (coincide con `base` en vite.config.ts). */
+export const SITE = '/Proyecto-mate-discreta';
+
+/** Dirección completa de una ruta interna de la aplicación. */
+export const sitePath = (path: string) => `${SITE}${path}`;
+
 /**
- * Prueba base: registra los errores de la consola y las excepciones de la página, y hace fallar
- * la prueba si aparece alguno. Cada prueba arranca con el almacenamiento local vacío.
+ * Prueba base: hace fallar la prueba si la página registra errores en la consola, lanza
+ * excepciones, recibe un error al descargar un recurso o pide un recurso fuera de la carpeta del
+ * sitio (lo que en GitHub Pages sería un enlace roto). Cada prueba arranca con el almacenamiento vacío.
  */
 export const test = base.extend<{ consoleErrors: string[] }>({
   consoleErrors: [
     async ({ page }, provide) => {
       const errors: string[] = [];
       page.on('console', (message) => {
-        if (message.type() === 'error') errors.push(message.text());
+        // Los fallos de descarga se controlan abajo, con más detalle (la página 404 de una dirección
+        // desconocida es intencional; un recurso con error, no).
+        if (message.type() === 'error' && !message.text().startsWith('Failed to load resource')) errors.push(message.text());
       });
       page.on('pageerror', (error) => errors.push(error.message));
+      page.on('response', (response) => {
+        if (response.status() >= 400 && response.request().resourceType() !== 'document') errors.push(`Recurso con error ${response.status()}: ${response.url()}`);
+      });
+      page.on('request', (request) => {
+        const url = new URL(request.url());
+        if (url.hostname === 'localhost' && !url.pathname.startsWith(`${SITE}/`)) errors.push(`Recurso fuera de la carpeta del sitio: ${url.pathname}`);
+      });
       await provide(errors);
       expect(errors, 'La página no debe registrar errores en la consola').toEqual([]);
     },
@@ -34,7 +50,7 @@ export const MODULE_ROUTES = [
 
 /** Abre una ruta y espera el título principal de la página. */
 export async function openPage(page: Page, path: string, title: string) {
-  await page.goto(path);
+  await page.goto(sitePath(path));
   await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
 }
 

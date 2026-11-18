@@ -16,9 +16,11 @@ Universidad del Valle de Guatemala, Campus Altiplano · Proyecto académico de S
 | 3 | Editor de grafos: vértices, aristas, pesos, grados, matrices, JSON | ✅ Completada |
 | 4 | Euler y Fleury, Hamilton, isomorfismo, Dijkstra, BFS y DFS | ✅ Completada |
 | 5 | Laboratorio de práctica: ejercicios, calificación y retroalimentación | ✅ Completada |
-| 6 | Pruebas de interfaz, optimización, documentación y publicación | 🟡 Lista para publicar (falta crear el repositorio y desplegar) |
+| 6 | Pruebas de interfaz, optimización, documentación y publicación | 🟡 Lista para publicar en GitHub Pages (falta el primer despliegue) |
 
-Los siete módulos están disponibles y probados. Para cerrar la Fase 6 solo falta publicar el código en GitHub y desplegarlo en Vercel (ver más abajo).
+Los siete módulos están disponibles y probados.
+
+**Dirección pública:** https://sergiogomez17.github.io/Proyecto-mate-discreta/ (GitHub Pages, gratuito, sin servidores externos). Se publica automáticamente en cada push a `main`; ver [Publicación en GitHub Pages](#publicación-en-github-pages).
 
 ### Qué se hizo en la Fase 6: calidad, optimización y documentación
 
@@ -39,9 +41,9 @@ Los siete módulos están disponibles y probados. Para cerrar la Fase 6 solo fal
   - una prueba intermitente esperaba un efecto de React sin aguardarlo; se corrigió.
 - **Optimización:**
   - **paquetes:** React y React Router van en un paquete propio que se conserva en caché entre versiones. React Flow (61 KB comprimido) y Motion (40 KB) se descargan solo en los módulos que los usan. El inicio carga unos 119 KB comprimidos de JavaScript;
-  - **caché:** `vercel.json` sirve `/assets/*` (archivos con huella en el nombre) con caché inmutable de un año.
+  - **caché:** los archivos de `assets/` llevan una huella en el nombre, por lo que cada versión nueva usa nombres nuevos y el navegador nunca mezcla versiones.
 - **Seguridad:**
-  - **política de seguridad de contenido (CSP):** solo recursos del propio sitio. Se incluye en la compilación (las pruebas E2E se ejecutan con ella activa) y como encabezado HTTP en Vercel, con `frame-ancestors 'none'`;
+  - **política de seguridad de contenido (CSP):** solo recursos del propio sitio. Se incluye en la compilación como etiqueta `<meta>` (GitHub Pages no permite encabezados propios) y las pruebas E2E se ejecutan con ella activa;
   - **otros encabezados:** `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy`;
   - **dependencias:** se actualizó Vitest a la versión 5, lo que elimina las vulnerabilidades críticas de las herramientas de prueba. `npm audit --omit=dev` (lo que se publica) informa **0 vulnerabilidades**. Persiste un aviso alto en `picomatch` 4.0.7 (ReDoS), usado solo al compilar con patrones propios y sin versión corregida publicada todavía.
 - **Documentación:**
@@ -258,7 +260,7 @@ Para escribir un grafo a mano se acepta una forma abreviada:
 | Área | Elección | Motivo |
 |---|---|---|
 | Interfaz | React 19 + TypeScript (modo estricto) | Componentes tipados y mantenibles |
-| Compilación | Vite 7 | Arranque y compilación rápidos; salida estática apta para Vercel |
+| Compilación | Vite 7 | Arranque y compilación rápidos; salida estática apta para GitHub Pages |
 | Estilos | Tailwind CSS 4 | La paleta institucional se define como tokens (`src/styles/index.css`) |
 | Rutas | React Router 7 | Rutas generadas desde un registro único de módulos |
 | Estado | Zustand 5 (+ `persist`) | Estado global sencillo con persistencia local |
@@ -277,6 +279,8 @@ La lógica matemática vive en `src/algorithms/`, en TypeScript puro y sin depen
 
 ```
 graphlab-uvg/
+├── .github/workflows/
+│   └── deploy.yml           Pruebas, compilación y publicación en GitHub Pages
 ├── public/                  Recursos estáticos (favicon)
 ├── src/
 │   ├── app/                 Registro de módulos, rutas y raíz de la aplicación
@@ -299,11 +303,11 @@ graphlab-uvg/
 │   ├── types/               Modelos de datos: grafos y árboles binarios
 │   ├── utils/               Almacenamiento seguro, descargas y utilidades
 │   └── main.tsx
-├── e2e/                     Pruebas de punta a punta (Playwright + axe-core)
+├── e2e/                     Pruebas de punta a punta (Playwright + axe-core) y servidor que imita GitHub Pages
 ├── index.html
 ├── playwright.config.ts     Escritorio y móvil sobre la compilación de producción
-├── vercel.json              Reescritura de rutas, caché de recursos y encabezados de seguridad
-└── vite.config.ts           Vite + Tailwind + Vitest, CSP y división en paquetes
+├── vercel.json              Solo para una publicación alternativa en Vercel (ver al final)
+└── vite.config.ts           Ruta base, páginas por ruta para GitHub Pages, CSP, paquetes y Vitest
 ```
 
 **Registro único de módulos (`src/app/modules.ts`).** El panel principal, la página «Simulaciones», el pie de página y las rutas se generan desde esta lista. Para entregar un módulo basta con cambiar su `status` y sustituir `ModuleStatusPage` por su página real en `src/app/routes.tsx`.
@@ -345,7 +349,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:5173`.
+Abra `http://localhost:5173/Proyecto-mate-discreta/` (la aplicación usa la misma ruta base que en GitHub Pages).
 
 | Script | Acción |
 |---|---|
@@ -368,8 +372,15 @@ npm run test:e2e    # de punta a punta (Playwright)
 
 **Resultado tras la Fase 6:**
 
-- **Vitest:** 303 pruebas en 26 archivos, todas superadas.
-- **Playwright:** 57 pruebas superadas en escritorio y móvil. Hay 5 omitidas a propósito porque solo aplican a uno de los dos: arrastre y teclado físico en escritorio, menú móvil en móvil.
+- **Vitest:** 304 pruebas en 27 archivos, todas superadas.
+- **Playwright:** 63 pruebas superadas en escritorio y móvil. Hay 5 omitidas a propósito porque solo aplican a uno de los dos: arrastre y teclado físico en escritorio, menú móvil en móvil.
+- **Servidor de las pruebas E2E:** `e2e/pages-server.mjs`, que se comporta como GitHub Pages:
+  - el sitio vive bajo `/Proyecto-mate-discreta/`;
+  - no reescribe rutas;
+  - redirige las carpetas sin barra final;
+  - responde con `404.html` a las direcciones desconocidas.
+
+  Las pruebas fallan si la página pide algún recurso fuera de esa carpeta o recibe un error al descargarlo.
 
 **Pruebas de punta a punta.** Por defecto usan **Microsoft Edge** instalado en el equipo, así que no hay que descargar navegadores. Alternativas:
 
@@ -527,43 +538,65 @@ En jsdom, el arrastre de vértices de React Flow no puede simularse (sus eventos
   - navegación: apertura de cada módulo, migas de pan, ausencia de controles simulados, página 404 y menú móvil;
   - diálogo de confirmación: no borra nada sin confirmar, Escape cancela y el foco queda atrapado.
 
-## Publicación en GitHub
+## Publicación en GitHub Pages
+
+El repositorio es [Sergiogomez17/Proyecto-mate-discreta](https://github.com/Sergiogomez17/Proyecto-mate-discreta) y la dirección pública:
+
+**https://sergiogomez17.github.io/Proyecto-mate-discreta/**
+
+No hace falta ningún servidor ni servicio de pago: GitHub compila el proyecto y publica los archivos estáticos.
+
+### Configuración (una sola vez)
+
+1. En GitHub, abra el repositorio → **Settings** → **Pages**.
+2. En **Build and deployment → Source**, elija **GitHub Actions**.
+
+### Publicar una versión
+
+Haga push a `main`:
 
 ```bash
-git init
-git add .
-git commit -m "GraphLab UVG: fases 1 a 6"
-git branch -M main
-git remote add origin https://github.com/<usuario>/graphlab-uvg.git
-git push -u origin main
+git push origin main
 ```
 
-Cree antes el repositorio vacío `graphlab-uvg` en GitHub, sin README, para evitar conflictos.
+El workflow `.github/workflows/deploy.yml` se ejecuta solo (también se puede lanzar a mano en **Actions → Desplegar en GitHub Pages → Run workflow**):
 
-## Despliegue en Vercel
+1. instala las dependencias con `npm ci` (Node.js 24);
+2. revisa el código con ESLint;
+3. ejecuta las pruebas (`npm test`);
+4. compila con `npm run build`, que también comprueba los tipos;
+5. publica la carpeta `dist` con las acciones oficiales `configure-pages`, `upload-pages-artifact` y `deploy-pages`.
 
-1. Entre en [vercel.com](https://vercel.com) con su cuenta de GitHub.
-2. Pulse **Add New… → Project** e importe el repositorio `graphlab-uvg`.
-3. Vercel detecta Vite y lee `vercel.json`:
-   - Build Command: `npm run build`
-   - Output Directory: `dist`
-4. Pulse **Deploy**. Cada `git push` a `main` vuelve a desplegar automáticamente.
+Si una prueba o la compilación fallan, no se publica nada y el sitio sigue mostrando la versión anterior. El avance se ve en la pestaña **Actions**; al terminar, el paso «Publicar» muestra la dirección.
 
-`vercel.json` hace tres cosas:
+### Cómo funcionan las rutas en GitHub Pages
 
-- reescribe todas las rutas hacia `index.html`, de modo que direcciones como `/simulaciones/dijkstra` funcionan al recargarlas o al abrirlas desde un enlace;
-- envía los encabezados de seguridad;
-- guarda en caché los recursos con huella.
+- **Ruta base:** `vite.config.ts` define `base: '/Proyecto-mate-discreta/'`, de modo que el JavaScript, el CSS, las fuentes y el ícono se piden desde esa carpeta. React Router usa la misma base (`basename` en `src/app/App.tsx`), y todos los enlaces internos la incluyen.
+- **Recargar páginas internas:** GitHub Pages solo sirve archivos, no reescribe rutas. Por eso la compilación copia `index.html` en una carpeta por cada ruta de la aplicación (`laboratorio/index.html`, `simulaciones/dijkstra/index.html`, …; la lista está en `src/app/staticPaths.ts` y una prueba comprueba que coincide con los módulos). Al recargar o abrir un enlace a un módulo, GitHub Pages responde 200 y la aplicación muestra esa página. Una dirección sin barra final se redirige a la misma con barra (`…/laboratorio` → `…/laboratorio/`), y funciona igual.
+- **Direcciones inexistentes:** se publica también una copia como `404.html`, así que la aplicación arranca y muestra su propia página «Página no encontrada».
+- **Seguridad:** GitHub Pages no permite encabezados HTTP propios. La política de seguridad de contenido viaja en una etiqueta `<meta>` de `index.html`.
 
-Alternativa sin GitHub: con la CLI de Vercel (`npm i -g vercel`), ejecute `vercel` en la carpeta del proyecto para una vista previa y `vercel --prod` para producción.
+### Probar localmente como en GitHub Pages
 
-**Comprobación después de desplegar:**
+```bash
+npm run build
+node e2e/pages-server.mjs 4173
+```
 
-1. Abra la URL pública y recorra los siete módulos.
-2. Recargue una ruta interna, por ejemplo `/laboratorio`.
-3. Confirme que no aparece ningún error en la consola del navegador.
+Abra `http://localhost:4173/Proyecto-mate-discreta/`. Las pruebas `npm run test:e2e` usan este mismo servidor.
 
-El docente solo necesita la URL pública (`https://<proyecto>.vercel.app`): no tiene que instalar nada ni crear cuenta.
+**Comprobación después de publicar:**
+
+1. Abra la dirección pública y recorra los siete módulos.
+2. Recargue una ruta interna, por ejemplo `…/Proyecto-mate-discreta/laboratorio`.
+3. Abra una dirección inexistente y confirme que aparece «Página no encontrada».
+4. Revise que la consola del navegador no muestre errores.
+
+El docente solo necesita la dirección pública: no tiene que instalar nada ni crear cuenta.
+
+### Alternativa: Vercel
+
+`vercel.json` se conserva para quien prefiera Vercel, que publica en la raíz de un dominio. En ese caso compile con la ruta base `/` definiendo la variable de entorno `BASE_PATH=/` en la configuración del proyecto en Vercel.
 
 ## Diseño
 
