@@ -20,7 +20,10 @@ Universidad del Valle de Guatemala, Campus Altiplano · Proyecto académico de S
 
 Los siete módulos están disponibles y probados.
 
-**Dirección pública:** https://sergiogomez17.github.io/Proyecto-mate-discreta/ (GitHub Pages, gratuito, sin servidores externos). Se publica automáticamente en cada push a `main`; ver [Publicación en GitHub Pages](#publicación-en-github-pages).
+**Direcciones públicas (gratuitas, sin servidores propios):**
+
+- Cloudflare Workers: https://proyecto-mate-discreta.sgomeztoma.workers.dev; ver [Publicación en Cloudflare Workers](#publicación-en-cloudflare-workers).
+- GitHub Pages: https://sergiogomez17.github.io/Proyecto-mate-discreta/. Se publica automáticamente en cada push a `main`; ver [Publicación en GitHub Pages](#publicación-en-github-pages).
 
 ### Qué se hizo en la Fase 6: calidad, optimización y documentación
 
@@ -307,6 +310,7 @@ graphlab-uvg/
 ├── index.html
 ├── playwright.config.ts     Escritorio y móvil sobre la compilación de producción
 ├── vercel.json              Solo para una publicación alternativa en Vercel (ver al final)
+├── wrangler.jsonc           Cloudflare Workers: publica dist/ como archivos estáticos
 └── vite.config.ts           Ruta base, páginas por ruta para GitHub Pages, CSP, paquetes y Vitest
 ```
 
@@ -349,7 +353,7 @@ npm install
 npm run dev
 ```
 
-Abra `http://localhost:5173/Proyecto-mate-discreta/` (la aplicación usa la misma ruta base que en GitHub Pages).
+Abra `http://localhost:5173/`.
 
 | Script | Acción |
 |---|---|
@@ -538,6 +542,49 @@ En jsdom, el arrastre de vértices de React Flow no puede simularse (sus eventos
   - navegación: apertura de cada módulo, migas de pan, ausencia de controles simulados, página 404 y menú móvil;
   - diálogo de confirmación: no borra nada sin confirmar, Escape cancela y el foco queda atrapado.
 
+## Publicación en Cloudflare Workers
+
+Dirección: **https://proyecto-mate-discreta.sgomeztoma.workers.dev**. Usa el plan gratuito de Workers: solo se publican archivos estáticos, sin código de servidor.
+
+### Configuración
+
+`wrangler.jsonc` indica a Cloudflare qué publicar y cómo:
+
+- `"name": "proyecto-mate-discreta"`: el nombre del Worker (la primera parte de la dirección).
+- `"assets": { "directory": "./dist" }`: publica la carpeta compilada.
+- `"not_found_handling": "404-page"`: una dirección inexistente recibe `404.html` con estado 404, así que la aplicación muestra «Página no encontrada». Un archivo inexistente, por ejemplo un `.js`, también responde 404, en vez de recibir HTML disfrazado de JavaScript.
+- `"html_handling": "drop-trailing-slash"`: `/laboratorio` sirve directamente `laboratorio/index.html`, y `/laboratorio/` redirige a `/laboratorio`.
+
+Las rutas internas funcionan al recargarlas porque la compilación crea una página por ruta (ver «Cómo funcionan las rutas» en la sección de GitHub Pages).
+
+### Compilar y desplegar
+
+El sitio está en la raíz del dominio, así que se compila con la base por defecto (`/`), **sin** `BASE_PATH`:
+
+```bash
+npm run build
+npx wrangler deploy
+```
+
+**Si el despliegue se hace desde el panel de Cloudflare** (Workers Builds conectado al repositorio):
+
+- comando de compilación: `npm run build`;
+- comando de despliegue: `npx wrangler deploy`;
+- no defina `BASE_PATH` en las variables de entorno.
+
+### Probar localmente como en Cloudflare
+
+```bash
+npm run build
+npx wrangler dev
+```
+
+Abra `http://localhost:8787/`. `wrangler dev` reproduce el servidor de archivos estáticos de Cloudflare con la configuración de `wrangler.jsonc`.
+
+### Error «Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "text/html"»
+
+Pantalla en blanco con este error significa que la compilación se hizo con otra ruta base. Por ejemplo, la de GitHub Pages: el HTML pide `/Proyecto-mate-discreta/assets/…js`, pero en Cloudflare los archivos están en `/assets/`. Vuelva a compilar sin `BASE_PATH` y despliegue de nuevo.
+
 ## Publicación en GitHub Pages
 
 El repositorio es [Sergiogomez17/Proyecto-mate-discreta](https://github.com/Sergiogomez17/Proyecto-mate-discreta) y la dirección pública:
@@ -579,7 +626,7 @@ Si una prueba o la compilación fallan, no se publica nada y el sitio sigue most
 
 ### Cómo funcionan las rutas en GitHub Pages
 
-- **Ruta base:** `vite.config.ts` define `base: '/Proyecto-mate-discreta/'`, de modo que el JavaScript, el CSS, las fuentes y el ícono se piden desde esa carpeta. React Router usa la misma base (`basename` en `src/app/App.tsx`), y todos los enlaces internos la incluyen.
+- **Ruta base:** por defecto el sitio se compila para la raíz de un dominio (`/`). El workflow compila con la variable `BASE_PATH=/Proyecto-mate-discreta/` (`vite.config.ts`), de modo que el JavaScript, el CSS, las fuentes y el ícono se piden desde esa carpeta. React Router usa la misma base (`basename` en `src/app/App.tsx`), y todos los enlaces internos la incluyen.
 - **Recargar páginas internas:** GitHub Pages solo sirve archivos, no reescribe rutas. Por eso la compilación copia `index.html` en una carpeta por cada ruta de la aplicación (`laboratorio/index.html`, `simulaciones/dijkstra/index.html`, …; la lista está en `src/app/staticPaths.ts` y una prueba comprueba que coincide con los módulos). Al recargar o abrir un enlace a un módulo, GitHub Pages responde 200 y la aplicación muestra esa página. Una dirección sin barra final se redirige a la misma con barra (`…/laboratorio` → `…/laboratorio/`), y funciona igual.
 - **Direcciones inexistentes:** se publica también una copia como `404.html`, así que la aplicación arranca y muestra su propia página «Página no encontrada».
 - **Seguridad:** GitHub Pages no permite encabezados HTTP propios. La política de seguridad de contenido viaja en una etiqueta `<meta>` de `index.html`.
@@ -587,11 +634,11 @@ Si una prueba o la compilación fallan, no se publica nada y el sitio sigue most
 ### Probar localmente como en GitHub Pages
 
 ```bash
-npm run build
+BASE_PATH=/Proyecto-mate-discreta/ npm run build
 node e2e/pages-server.mjs 4173
 ```
 
-Abra `http://localhost:4173/Proyecto-mate-discreta/`. Las pruebas `npm run test:e2e` usan este mismo servidor.
+(En PowerShell: `$env:BASE_PATH = "/Proyecto-mate-discreta/"; npm run build`.) Abra `http://localhost:4173/Proyecto-mate-discreta/`. Las pruebas `npm run test:e2e` usan este mismo servidor.
 
 **Comprobación después de publicar:**
 
@@ -604,7 +651,7 @@ El docente solo necesita la dirección pública: no tiene que instalar nada ni c
 
 ### Alternativa: Vercel
 
-`vercel.json` se conserva para quien prefiera Vercel, que publica en la raíz de un dominio. En ese caso compile con la ruta base `/` definiendo la variable de entorno `BASE_PATH=/` en la configuración del proyecto en Vercel.
+`vercel.json` se conserva para quien prefiera Vercel, que publica en la raíz de un dominio. Use la compilación por defecto (`npm run build`, base `/`), sin `BASE_PATH`.
 
 ## Diseño
 

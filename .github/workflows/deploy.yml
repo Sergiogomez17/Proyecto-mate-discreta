@@ -48,8 +48,11 @@ jobs:
         run: npm test
 
       - name: Compilar para producción
-        # Incluye la comprobación de tipos (tsc -b) y genera dist/ con la base /Proyecto-mate-discreta/.
+        # Incluye la comprobación de tipos (tsc -b). GitHub Pages publica el sitio en la carpeta
+        # /Proyecto-mate-discreta/ (en otros destinos la base por defecto es /).
         run: npm run build
+        env:
+          BASE_PATH: /Proyecto-mate-discreta/
 
       - name: Configurar GitHub Pages
         uses: actions/configure-pages@v6

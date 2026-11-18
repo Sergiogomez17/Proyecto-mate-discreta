@@ -9,11 +9,14 @@ import type { Plugin } from 'vite';
 import { STATIC_PATHS } from './src/app/staticPaths';
 
 /**
- * Ruta base del sitio. GitHub Pages lo publica en https://sergiogomez17.github.io/Proyecto-mate-discreta/,
- * así que todos los recursos y rutas cuelgan de `/Proyecto-mate-discreta/`. Para publicarlo en la raíz
- * de un dominio (por ejemplo, en Vercel), compile con la variable de entorno `BASE_PATH=/`.
+ * Ruta base del sitio: la carpeta desde la que se piden los recursos y en la que viven las rutas.
+ * - Por defecto `/`: el sitio está en la raíz del dominio (Cloudflare Workers, Vercel, desarrollo local).
+ * - GitHub Pages lo publica en https://sergiogomez17.github.io/Proyecto-mate-discreta/, así que su
+ *   workflow compila con `BASE_PATH=/Proyecto-mate-discreta/`.
+ * Si la base no coincide con la dirección real, el navegador pide los módulos en una carpeta que no
+ * existe y la página queda en blanco.
  */
-const BASE_PATH = process.env.BASE_PATH ?? '/Proyecto-mate-discreta/';
+const BASE_PATH = process.env.BASE_PATH ?? '/';
 
 /**
  * GitHub Pages no reescribe rutas hacia `index.html` como un servidor de aplicaciones. Tras compilar:

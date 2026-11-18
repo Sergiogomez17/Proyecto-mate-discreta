@@ -31,6 +31,8 @@ export default defineConfig({
   webServer: {
     command: `npm run build && node e2e/pages-server.mjs ${PORT}`,
     url: `http://localhost:${PORT}/Proyecto-mate-discreta/`,
+    // Se compila con la misma base que en GitHub Pages (la base por defecto es /).
+    env: { BASE_PATH: '/Proyecto-mate-discreta/' },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

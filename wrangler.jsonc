@@ -1,0 +1,17 @@
+// Cloudflare Workers: publica la carpeta dist/ como archivos estáticos (sin código de servidor).
+// Dirección: https://proyecto-mate-discreta.sgomeztoma.workers.dev  (plan gratuito)
+// Compilar con la base por defecto (/) y desplegar:  npm run build  →  npx wrangler deploy
+{
+  "name": "proyecto-mate-discreta",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    // Las rutas internas existen como archivos (laboratorio/index.html, …): no hace falta reescribir
+    // las direcciones hacia index.html. Una dirección inexistente recibe 404.html con estado 404 (la
+    // aplicación arranca y muestra «Página no encontrada»), y un archivo inexistente, por ejemplo un
+    // .js, responde 404 en lugar de devolver HTML disfrazado de JavaScript.
+    "not_found_handling": "404-page",
+    // «/laboratorio» sirve laboratorio/index.html directamente; «/laboratorio/» redirige a «/laboratorio».
+    "html_handling": "drop-trailing-slash"
+  }
+}

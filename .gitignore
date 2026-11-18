@@ -9,3 +9,4 @@ playwright-report
 *.log
 # Configuración local del entorno de desarrollo
 .claude
+.wrangler
