@@ -31,8 +31,9 @@ describe('módulo de teoría de grafos', () => {
 
   it('dibuja el grafo de ejemplo y calcula sus propiedades', async () => {
     const { container } = await openModule();
-    expect(container.querySelectorAll('.react-flow__node')).toHaveLength(6);
-    expect(container.querySelectorAll('.react-flow__edge')).toHaveLength(9);
+    // React Flow monta vértices y aristas justo después de la página (en una ejecución en frío, con retraso).
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__node')).toHaveLength(6));
+    await waitFor(() => expect(container.querySelectorAll('.react-flow__edge')).toHaveLength(9));
     expect(stat('Vértices |V|')).toBe('6');
     expect(stat('Aristas |E|')).toBe('9');
     expect(stat('Componentes conexas')).toBe('1');
