@@ -551,6 +551,14 @@ No hace falta ningún servidor ni servicio de pago: GitHub compila el proyecto y
 1. En GitHub, abra el repositorio → **Settings** → **Pages**.
 2. En **Build and deployment → Source**, elija **GitHub Actions**.
 
+Haga esto **antes** del primer push. Si el workflow corre con Pages desactivado, el paso «Configurar GitHub Pages» falla con este mensaje:
+
+> HttpError: Not Found — Get Pages site failed
+
+En ese caso, active Pages como se indica arriba y abra **Actions** → la ejecución fallida → **Re-run all jobs** (no hace falta otro push).
+
+No conviene usar `enablement: true` en `configure-pages`: activar Pages desde el workflow exige un token personal o de una GitHub App con permiso de administración, y con el `GITHUB_TOKEN` habitual esa opción falla.
+
 ### Publicar una versión
 
 Haga push a `main`:

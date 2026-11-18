@@ -1,6 +1,12 @@
 # Publica GraphLab UVG en GitHub Pages: https://sergiogomez17.github.io/Proyecto-mate-discreta/
-# Se ejecuta en cada push a main (y a mano desde la pestaña Actions). Requisito único en GitHub:
-# Settings → Pages → Build and deployment → Source: «GitHub Actions».
+# Se ejecuta en cada push a main (y a mano desde la pestaña Actions). Requisito único en GitHub,
+# ANTES de la primera ejecución: Settings → Pages → Build and deployment → Source: «GitHub Actions».
+#
+# Si «Configurar GitHub Pages» falla con «HttpError: Not Found / Get Pages site failed», Pages no
+# estaba activado cuando corrió el workflow. Actívelo como se indica arriba y vuelva a ejecutar el
+# workflow (Actions → la ejecución fallida → «Re-run all jobs»). No se usa `enablement: true` en
+# configure-pages: activar Pages desde el workflow exige un token personal o de una GitHub App con
+# permiso de administración; con el GITHUB_TOKEN de siempre esa opción falla.
 name: Desplegar en GitHub Pages
 
 on:
